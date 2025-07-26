@@ -100,14 +100,6 @@ class StatusPanel extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        _buildStatusIndicator(
-          context,
-          'Display',
-          status.displayString,
-          Colors.indigo,
-          status.isWaveformDisplay ? Icons.show_chart : Icons.monitor,
-        ),
       ],
     );
   }
