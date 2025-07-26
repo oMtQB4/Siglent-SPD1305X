@@ -136,6 +136,43 @@ class SPD1305XClient {
     return response != null;
   }
   
+  // Mode commands
+  Future<bool> setWireMode(String mode) async {
+    // Use the correct MODE:SET command format
+    final command = 'MODE:SET $mode';
+    print('Setting wire mode: $command');
+    final response = await sendCommand(command);
+    print('Wire mode response: "$response"');
+    
+    // Check if response indicates success
+    if (response != null) {
+      final responseUpper = response.trim().toUpperCase();
+      if (responseUpper.isEmpty || 
+          responseUpper == 'OK' || 
+          responseUpper.contains('MODE') ||
+          responseUpper.contains(mode)) {
+        return true;
+      } else if (responseUpper.contains('ERROR') || responseUpper.contains('INVALID')) {
+        print('Wire mode command failed with response: $response');
+        return false;
+      }
+      // If we get any other response, assume success
+      return true;
+    }
+    return false;
+  }
+
+  Future<String?> getWireMode() async {
+    // Query current wire mode
+    final response = await sendCommand('MODE:SET?');
+    if (response != null) {
+      final trimmed = response.trim().toUpperCase();
+      if (trimmed.contains('2W')) return '2W';
+      if (trimmed.contains('4W')) return '4W';
+    }
+    return null;
+  }
+  
   // System commands
   Future<String?> getSystemError() async {
     return await sendCommand('SYSTem:ERRor?');

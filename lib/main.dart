@@ -5,6 +5,7 @@ import 'widgets/connection_panel.dart';
 import 'widgets/measurement_panel.dart';
 import 'widgets/control_panel.dart';
 import 'widgets/status_panel.dart';
+import 'widgets/mode_panel.dart';
 
 void main() {
   runApp(const SPD1305XApp());
@@ -61,6 +62,8 @@ class MainScreen extends StatelessWidget {
                         const ControlPanel(),
                         const SizedBox(height: 8),
                         const StatusPanel(),
+                        const SizedBox(height: 8),
+                        const ModePanel(),
                       ],
                     );
                   } else {
@@ -82,10 +85,16 @@ class MainScreen extends StatelessWidget {
                           
                           const SizedBox(width: 8),
                           
-                          // Right column - Controls
-                          const Expanded(
+                          // Right column - Controls and Mode
+                          Expanded(
                             flex: 1,
-                            child: ControlPanel(),
+                            child: Column(
+                              children: [
+                                const ControlPanel(),
+                                const SizedBox(height: 8),
+                                const ModePanel(),
+                              ],
+                            ),
                           ),
                         ],
                       ),

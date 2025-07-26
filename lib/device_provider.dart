@@ -25,6 +25,9 @@ class DeviceProvider extends ChangeNotifier {
   double _ch1VoltageSet = 0.0;
   double _ch1CurrentSet = 0.0;
   bool _ch1OutputEnabled = false;
+  double _voltageSetpoint = 0.0;
+  double _currentSetpoint = 0.0;
+  String _wireMode = '';
   
   // Connection settings
   String _ipAddress = 'spd1305x';
@@ -45,6 +48,9 @@ class DeviceProvider extends ChangeNotifier {
   double get ch1VoltageSet => _ch1VoltageSet;
   double get ch1CurrentSet => _ch1CurrentSet;
   bool get ch1OutputEnabled => _ch1OutputEnabled;
+  double get voltageSetpoint => _voltageSetpoint;
+  double get currentSetpoint => _currentSetpoint;
+  String get wireMode => _wireMode;
   
   String get ipAddress => _ipAddress;
   int get port => _port;
@@ -162,14 +168,21 @@ class DeviceProvider extends ChangeNotifier {
     if (_client == null) return;
     
     try {
-      final voltageSet = await _client!.getVoltageSetting('CH1');
-      if (voltageSet != null) {
-        _ch1VoltageSet = voltageSet;
+      // Get voltage and current setpoints
+      final voltageResponse = await _client!.getVoltageSetting('CH1');
+      if (voltageResponse != null) {
+        _voltageSetpoint = voltageResponse;
       }
       
-      final currentSet = await _client!.getCurrentSetting('CH1');
-      if (currentSet != null) {
-        _ch1CurrentSet = currentSet;
+      final currentResponse = await _client!.getCurrentSetting('CH1');
+      if (currentResponse != null) {
+        _currentSetpoint = currentResponse;
+      }
+      
+      // Get wire mode
+      final wireModeResponse = await _client!.getWireMode();
+      if (wireModeResponse != null) {
+        _wireMode = wireModeResponse;
       }
       
       notifyListeners();
@@ -243,6 +256,22 @@ class DeviceProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       print('Error setting output: $e');
+      return false;
+    }
+  }
+  
+  Future<bool> setWireMode(String mode) async {
+    if (_client == null) return false;
+    
+    try {
+      final success = await _client!.setWireMode(mode);
+      if (success) {
+        _wireMode = mode;
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      print('Error setting wire mode: $e');
       return false;
     }
   }
