@@ -163,14 +163,29 @@ class SPD1305XClient {
   }
 
   Future<String?> getWireMode() async {
-    // Query current wire mode
+    // Query current wire mode - try multiple command formats
     final response = await sendCommand('MODE:SET?');
+    print('Wire mode query response: "$response"');
+    
     if (response != null) {
       final trimmed = response.trim().toUpperCase();
-      if (trimmed.contains('2W')) return '2W';
-      if (trimmed.contains('4W')) return '4W';
+      if (trimmed.contains('2W') || trimmed == '2W') return '2W';
+      if (trimmed.contains('4W') || trimmed == '4W') return '4W';
+      
+      // If the response doesn't contain clear mode info, try alternative query
+      final altResponse = await sendCommand('MODE?');
+      print('Alternative wire mode query response: "$altResponse"');
+      
+      if (altResponse != null) {
+        final altTrimmed = altResponse.trim().toUpperCase();
+        if (altTrimmed.contains('2W') || altTrimmed == '2W') return '2W';
+        if (altTrimmed.contains('4W') || altTrimmed == '4W') return '4W';
+      }
     }
-    return null;
+    
+    // If no valid response, default to 4W (common default for power supplies)
+    print('Wire mode query failed, defaulting to 4W');
+    return '4W';
   }
   
   // System commands

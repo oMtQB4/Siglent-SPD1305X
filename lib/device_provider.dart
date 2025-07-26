@@ -27,7 +27,7 @@ class DeviceProvider extends ChangeNotifier {
   bool _ch1OutputEnabled = false;
   double _voltageSetpoint = 0.0;
   double _currentSetpoint = 0.0;
-  String _wireMode = '';
+  String _wireMode = 'Unknown';
   
   // Connection settings
   String _ipAddress = 'spd1305x';
@@ -76,6 +76,9 @@ class DeviceProvider extends ChangeNotifier {
         // Get device info
         await _updateDeviceInfo();
         
+        // Get wire mode
+        await _updateWireMode();
+        
         // Start periodic measurements
         _startMeasurements();
         
@@ -113,12 +116,37 @@ class DeviceProvider extends ChangeNotifier {
   }
   
   void _startMeasurements() {
-    _measurementTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+    _measurementTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
       if (_isConnected && _client != null) {
-        await _updateMeasurements();
-        await _updateSystemStatus();
+        await _updateMeasurementsAsync();
       }
     });
+  }
+  
+  Future<void> _updateMeasurementsAsync() async {
+    try {
+      print('=== Background Update Cycle ${_measurementTimer?.tick} ===');
+      
+      // Only update measurements every cycle
+      await _updateMeasurements();
+      
+      // Update system status less frequently (every 3rd cycle)
+      if (_measurementTimer?.tick != null && _measurementTimer!.tick % 3 == 0) {
+        print('Updating system status (cycle ${_measurementTimer!.tick})');
+        await _updateSystemStatus();
+      }
+      
+      // Update setpoints and wire mode less frequently (every 5th cycle) 
+      if (_measurementTimer?.tick != null && _measurementTimer!.tick % 5 == 0) {
+        print('Updating settings (cycle ${_measurementTimer!.tick})');
+        await _updateSettings();
+      }
+      
+      print('=== End Background Update ===');
+    } catch (e) {
+      print('Error in background update: $e');
+      // Don't let background errors affect UI
+    }
   }
   
   Future<void> _updateDeviceInfo() async {
@@ -179,7 +207,16 @@ class DeviceProvider extends ChangeNotifier {
         _currentSetpoint = currentResponse;
       }
       
-      // Get wire mode
+      notifyListeners();
+    } catch (e) {
+      print('Error updating settings: $e');
+    }
+  }
+  
+  Future<void> _updateWireMode() async {
+    if (_client == null) return;
+    
+    try {
       final wireModeResponse = await _client!.getWireMode();
       if (wireModeResponse != null) {
         _wireMode = wireModeResponse;
@@ -187,7 +224,7 @@ class DeviceProvider extends ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('Error updating settings: $e');
+      print('Error updating wire mode: $e');
     }
   }
   
