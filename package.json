@@ -1,0 +1,90 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "semantic-release-monorepo": "^8.0.2"
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "tagFormat": "${version}",
+    "ci": false,
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "type": "feat",
+              "release": "minor"
+            },
+            {
+              "type": "fix",
+              "release": "patch"
+            },
+            {
+              "type": "perf",
+              "release": "patch"
+            },
+            {
+              "breaking": true,
+              "release": "major"
+            },
+            {
+              "revert": true,
+              "release": "patch"
+            }
+          ]
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "linkCompare": false,
+          "writerOpts": {
+            "commitPartial": "* {{header}} ({{hash}})\n"
+          },
+          "parserOpts": {
+            "headerCorrespondence": [
+              "type",
+              "subject"
+            ],
+            "headerPattern": "^(\\w*)\\: (.*)$"
+          }
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "/bin/bash -c './change_version.sh ${nextRelease.version}'"
+        }
+      ],
+      "@semantic-release/changelog",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "CHANGELOG.md",
+            "package.json",
+            "package-lock.json",
+            "npm-shrinkwrap.json",
+            "pubspec.yaml"
+          ],
+          "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+        }
+      ]
+    ]
+  },
+  "dependencies": {
+    "gradle-semantic-release-plugin": "^1.10.3",
+    "semantic-release": "^25.0.2"
+  }
+}
