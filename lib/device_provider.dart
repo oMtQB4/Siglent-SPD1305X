@@ -136,11 +136,8 @@ class DeviceProvider extends ChangeNotifier {
         await _updateSystemStatus();
       }
       
-      // Update setpoints and wire mode less frequently (every 5th cycle) 
-      if (_measurementTimer?.tick != null && _measurementTimer!.tick % 5 == 0) {
-        print('Updating settings (cycle ${_measurementTimer!.tick})');
-        await _updateSettings();
-      }
+      // Update setpoints every cycle along with measurements
+      await _updateSettings();
       
       print('=== End Background Update ===');
     } catch (e) {
@@ -194,19 +191,21 @@ class DeviceProvider extends ChangeNotifier {
   
   Future<void> _updateSettings() async {
     if (_client == null) return;
-    
+
     try {
       // Get voltage and current setpoints
       final voltageResponse = await _client!.getVoltageSetting('CH1');
       if (voltageResponse != null) {
         _voltageSetpoint = voltageResponse;
+        _ch1VoltageSet = voltageResponse;
       }
-      
+
       final currentResponse = await _client!.getCurrentSetting('CH1');
       if (currentResponse != null) {
         _currentSetpoint = currentResponse;
+        _ch1CurrentSet = currentResponse;
       }
-      
+
       notifyListeners();
     } catch (e) {
       print('Error updating settings: $e');

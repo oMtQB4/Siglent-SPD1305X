@@ -40,6 +40,18 @@ class MainScreen extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('SPD1305X Power Supply Controller'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Licenses',
+            onPressed: () {
+              showLicensePage(
+                context: context,
+                applicationName: 'SPD1305X Power Supply Controller',
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
