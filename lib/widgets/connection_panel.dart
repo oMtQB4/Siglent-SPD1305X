@@ -209,11 +209,66 @@ class _ConnectionPanelState extends State<ConnectionPanel> {
     );
     
     try {
-      await NetworkTest.testConnection(provider.ipAddress, provider.port);
-    } finally {
+      final result = await NetworkTest.testConnection(provider.ipAddress, provider.port);
       if (mounted) {
         Navigator.of(context).pop(); // Close loading dialog
+        _showTestResult(result);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        _showTestResult(NetworkTestResult(
+          success: false,
+          message: 'Test failed: $e',
+        ));
       }
     }
+  }
+  
+  void _showTestResult(NetworkTestResult result) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              result.success ? Icons.check_circle : Icons.error,
+              color: result.success ? Colors.green : Colors.red,
+            ),
+            const SizedBox(width: 8),
+            Text(result.success ? 'Connection Test Successful' : 'Connection Test Failed'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(result.message),
+            if (result.deviceInfo != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Device: ${result.deviceInfo}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+            if (result.diagnostics != null) ...[
+              const SizedBox(height: 12),
+              const Text(
+                'Diagnostics:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(result.diagnostics!, style: const TextStyle(fontSize: 12)),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }
