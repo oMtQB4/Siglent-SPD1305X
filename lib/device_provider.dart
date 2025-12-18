@@ -67,6 +67,7 @@ class DeviceProvider extends ChangeNotifier {
       notifyListeners();
       
       _client = SPD1305XClient(_ipAddress, _port);
+      _client!.onDisconnect = _handleDisconnect;
       final success = await _client!.connect();
       
       if (success) {
@@ -112,6 +113,16 @@ class DeviceProvider extends ChangeNotifier {
     
     _isConnected = false;
     _connectionStatus = 'Disconnected';
+    notifyListeners();
+  }
+  
+  void _handleDisconnect() {
+    print('Connection lost - cleaning up');
+    _measurementTimer?.cancel();
+    _measurementTimer = null;
+    _client = null;
+    _isConnected = false;
+    _connectionStatus = 'Disconnected (connection lost)';
     notifyListeners();
   }
   

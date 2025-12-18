@@ -11,6 +11,8 @@ class SPD1305XClient {
   final StreamController<String> _responseController = StreamController<String>.broadcast();
   Stream<String> get responseStream => _responseController.stream;
   
+  void Function()? onDisconnect;
+  
   SPD1305XClient(this._host, this._port);
   
   bool get isConnected => _isConnected;
@@ -27,11 +29,17 @@ class SPD1305XClient {
         },
         onError: (error) {
           print('Socket error: $error');
-          _isConnected = false;
+          _handleDisconnect();
         },
         onDone: () {
-          _isConnected = false;
+          print('Socket closed by remote');
+          // Only handle as disconnect if we think we're still connected
+          // This prevents false disconnects during normal operation
+          if (_isConnected && _socket != null) {
+            _handleDisconnect();
+          }
         },
+        cancelOnError: false,
       );
       
       return true;
@@ -39,6 +47,13 @@ class SPD1305XClient {
       print('Connection error: $e');
       _isConnected = false;
       return false;
+    }
+  }
+  
+  void _handleDisconnect() {
+    if (_isConnected) {
+      _isConnected = false;
+      onDisconnect?.call();
     }
   }
   
@@ -79,6 +94,7 @@ class SPD1305XClient {
       return await completer.future;
     } catch (e) {
       print('Send command error: $e');
+      // Don't treat command errors as disconnects - socket listener handles real disconnects
       return null;
     }
   }
